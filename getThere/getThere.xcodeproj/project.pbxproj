@@ -16,6 +16,7 @@
 		CED002DC215AE0E2002CE217 /* Stations.swift in Sources */ = {isa = PBXBuildFile; fileRef = CED002DB215AE0E2002CE217 /* Stations.swift */; };
 		CED002DE215B7548002CE217 /* SearchTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = CED002DD215B7548002CE217 /* SearchTextField.swift */; };
 		CED002E0215B8A16002CE217 /* Locations.swift in Sources */ = {isa = PBXBuildFile; fileRef = CED002DF215B8A16002CE217 /* Locations.swift */; };
+		CED002E2215BA9AC002CE217 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CED002E1215BA9AC002CE217 /* Extensions.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -42,6 +43,7 @@
 		CED002DB215AE0E2002CE217 /* Stations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stations.swift; sourceTree = "<group>"; };
 		CED002DD215B7548002CE217 /* SearchTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchTextField.swift; sourceTree = "<group>"; };
 		CED002DF215B8A16002CE217 /* Locations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Locations.swift; sourceTree = "<group>"; };
+		CED002E1215BA9AC002CE217 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -87,6 +89,7 @@
 				CED002BD215AC54F002CE217 /* MapViewController.swift */,
 				CED002DF215B8A16002CE217 /* Locations.swift */,
 				CED002DD215B7548002CE217 /* SearchTextField.swift */,
+				CED002E1215BA9AC002CE217 /* Extensions.swift */,
 				CED002BF215AC54F002CE217 /* Main.storyboard */,
 				CED002DB215AE0E2002CE217 /* Stations.swift */,
 				CED002C2215AC551002CE217 /* Assets.xcassets */,
@@ -207,6 +210,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				CED002E0215B8A16002CE217 /* Locations.swift in Sources */,
+				CED002E2215BA9AC002CE217 /* Extensions.swift in Sources */,
 				CED002BE215AC54F002CE217 /* MapViewController.swift in Sources */,
 				CED002BC215AC54F002CE217 /* AppDelegate.swift in Sources */,
 				CED002DC215AE0E2002CE217 /* Stations.swift in Sources */,

@@ -33,8 +33,13 @@ class Locations: NSObject, CLLocationManagerDelegate {
       locationManager.delegate = self
       locationManager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
       locationManager.startUpdatingLocation()
+      locationManager.startUpdatingHeading()
     }
     
   }
   
+  func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
+    NotificationCenter.default.post(name: Notification.Name.newHeading, object: nil, userInfo: ["newHeading":newHeading])
+  }
+    
 }

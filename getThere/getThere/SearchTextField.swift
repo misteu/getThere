@@ -593,7 +593,9 @@ extension SearchTextField: UITableViewDelegate, UITableViewDataSource {
   
   public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
     if itemSelectionHandler == nil {
-      self.text = filteredResults[(indexPath as NSIndexPath).row].title
+      let result = filteredResults[(indexPath as NSIndexPath).row].title
+      self.text = result
+      NotificationCenter.default.post(name: Notification.Name.clickedOnItem, object: nil, userInfo: ["selectedItem":result])
     } else {
       let index = indexPath.row
       itemSelectionHandler!(filteredResults, index)
