@@ -12,7 +12,8 @@ import CoreLocation
 
 class Station {
   
-  static var foundStations = [String]()
+  static var nearestStations = [[String:Any]]()
+  static var foundStationNames = [String]()
   
   static func getNearestStations(dispatchGroup: DispatchGroup, location: CLLocationCoordinate2D) {
     // Set up the URL request
@@ -48,12 +49,15 @@ class Station {
           let json = try JSONSerialization.jsonObject(with: responseData, options: []) as? [[String:Any]]
           
           if let stations = json {
-            for station in stations {
-              if let stationName = station["name"] as? String{
-                //print(stationName)
-                foundStations.append(stationName)
-              }
-            }
+//            for station in stations {
+//              if let stationName = station["location"] as? String{
+//                //print(stationName)
+//                foundStations.append(stationName)
+//              }
+//            }
+            
+            nearestStations = stations
+          
           }
           
         } catch {
@@ -102,7 +106,7 @@ class Station {
           for station in stations {
             if let stationName = station["name"] as? String{
               //print(stationName)
-              foundStations.append(stationName)
+              foundStationNames.append(stationName)
             }
           }
         }

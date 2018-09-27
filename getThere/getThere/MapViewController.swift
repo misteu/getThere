@@ -91,7 +91,7 @@ class MapViewController: UIViewController, UITextFieldDelegate, MKMapViewDelegat
     group.notify(queue: .main) {
       print("fertig")
       
-      let stations = Station.foundStations
+      let stations = Station.foundStationNames
       if stations.count > 0 {
         print(stations)
         print("update")
@@ -162,6 +162,76 @@ class MapViewController: UIViewController, UITextFieldDelegate, MKMapViewDelegat
   
   @objc func buttonAction(sender: UIButton!) {
     print("Button tapped")
+    
+    let group = DispatchGroup()
+    group.enter()
+    DispatchQueue.main.async {
+      if let location = self.locationSet.currentLocation {
+        Station.getNearestStations(dispatchGroup: group, location: location)
+      }
+    }
+    // Request ist fertig
+    group.notify(queue: .main) {
+      print("fertig")
+      self.drawLocationsForStations()
+    }
+    
+  }
+  
+  func drawLocationsForStations() {
+    for station in Station.nearestStations {
+      
+      let stationAnnotation = CustomPointAnnotation()
+      
+      var loc = CLLocationCoordinate2D.init()
+      
+      if let location = station["location"] as? [String:Any] {
+        if let lat = location["latitude"] as? Double {
+          loc.latitude = lat
+        }
+        
+        if let long = location["longitude"] as? Double {
+          loc.longitude = long
+        }
+      }
+      
+      if let products = station["products"] as? [String:Bool] {
+        var resultStr = ""
+        var multiCount = 0
+        
+        for product in products {
+          if product.value {
+            if resultStr == "" {
+              resultStr = product.key
+            } else {
+              resultStr = "\(resultStr), \(product.key)"
+            }
+            stationAnnotation.pinCustomImageName = product.key
+            multiCount += 1
+          }
+          if multiCount > 1 {
+            stationAnnotation.pinCustomImageName = AnnotationImage.multi.rawValue
+          }
+        }
+        stationAnnotation.subtitle = resultStr.uppercased()
+      }
+      
+      if let stationName = station["name"] as? String {
+        stationAnnotation.title = stationName
+      }
+      
+      stationAnnotation.coordinate = loc
+      
+      self.drawLocationOnMap(location: loc, pointAnnotation: stationAnnotation)
+    }
+
+  }
+  
+  func drawLocationOnMap(location: CLLocationCoordinate2D, pointAnnotation: CustomPointAnnotation) {
+    var pinAnnotationView:MKPinAnnotationView!
+    
+    pinAnnotationView = MKPinAnnotationView(annotation: pointAnnotation, reuseIdentifier: "pin")
+    mapView.addAnnotation(pinAnnotationView.annotation!)
   }
   
   func addNotificationObserver() {
@@ -203,22 +273,9 @@ class MapViewController: UIViewController, UITextFieldDelegate, MKMapViewDelegat
       headingImageView?.isHidden = false
       let rotation = CGFloat(newHeading.trueHeading/180 * Double.pi)
       headingImageView?.transform = CGAffineTransform(rotationAngle: rotation)
+      
+      locationSet.lastHeading = newHeading
     }
-  }
-  
-  func textFieldDidBeginEditing(_ textField: UITextField) {
-    //    if let button = getThereButton {
-    //      UIView.animate(withDuration: 0.2,
-    //                     delay: 0.0,
-    //                     options: UIView.AnimationOptions.curveEaseInOut,
-    //                     animations: {
-    //                      button.frame = CGRect.init(x: button.frame.minX, y: -55, width: button.frame.width, height: 50.0)
-    //      })
-    //    }
-  }
-  
-  @objc func textFieldDidChange() {
-    
   }
   
   @IBAction func didChangeSearchTextField(_ sender: Any) {
@@ -232,6 +289,40 @@ class MapViewController: UIViewController, UITextFieldDelegate, MKMapViewDelegat
                       button.frame = CGRect.init(x: button.frame.minX, y: -55, width: button.frame.width, height: 50.0)
       })
     }
+    
+  }
+  func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+    
+    guard !annotation.isKind(of: MKUserLocation.self) else {
+      
+      return nil
+    }
+    
+    let annotationIdentifier = "AnnotationIdentifier"
+    
+    var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: annotationIdentifier)
+    
+    if annotationView == nil {
+      annotationView = MKAnnotationView(annotation: annotation, reuseIdentifier: annotationIdentifier)
+      annotationView!.rightCalloutAccessoryView = UIButton(type: .detailDisclosure)
+      annotationView!.canShowCallout = true
+    }
+    else {
+      annotationView!.annotation = annotation
+    }
+    
+    if let customPointAnnotation = annotation as? CustomPointAnnotation {
+      if let image = UIImage(named: customPointAnnotation.pinCustomImageName) {
+        
+        let imgView = UIImageView.init(frame: CGRect.init(x: 0, y: 100, width: 40, height: 40))
+        imgView.contentMode = UIView.ContentMode.center
+        imgView.image = image
+        
+        annotationView?.image = image
+      }
+    }
+    
+    return annotationView
     
   }
   

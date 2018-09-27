@@ -15,6 +15,7 @@ class Locations: NSObject, CLLocationManagerDelegate {
   var hasFoundFirstLocation = false
   var findFirstLocationTimer: Timer!
   var foundLocations = [String]()
+  var lastHeading: CLHeading?
   
   func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
     guard let locValue: CLLocationCoordinate2D = manager.location?.coordinate else { return }
