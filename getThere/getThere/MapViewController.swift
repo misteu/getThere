@@ -29,10 +29,6 @@ class MapViewController: UIViewController, UITextFieldDelegate, MKMapViewDelegat
     mapView.delegate = self
     locationSet.initLocating()
     
-    //    let pfeilImage = UIImage.init(named: "pfeil")
-    //    let pfeilImgView = UIImageView.init(image: pfeilImage)
-    //
-    //    mapView.addSubview(pfeilImgView)
     
     locationSet.findFirstLocationTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(jumpToFirstLocation), userInfo: nil, repeats: !locationSet.hasFoundFirstLocation)
     
@@ -53,7 +49,6 @@ class MapViewController: UIViewController, UITextFieldDelegate, MKMapViewDelegat
       mapView.setCamera(getCameraForLocation(locValue: location, heading: 0), animated: true)
       mapView.addAnnotation(mapView.userLocation)
       
-      //let pfeilAnnotation =
       
       locationSet.hasFoundFirstLocation = true
       locationSet.findFirstLocationTimer.invalidate()
@@ -244,15 +239,16 @@ class MapViewController: UIViewController, UITextFieldDelegate, MKMapViewDelegat
   
   func mapView(_ mapView: MKMapView, didAdd views: [MKAnnotationView]) {
     
-    print("didAdd!")
+    
     
     if views.last?.annotation is MKUserLocation {
+      print("didAdd!")
       addHeadingView(toAnnotationView: views.last!)
     }
   }
   
   func addHeadingView(toAnnotationView annotationView: MKAnnotationView) {
-    let image = UIImage.init(named: "pfeil")
+    let image = UIImage.init(named: "direction")
     
     if let img = image, headingImageView == nil {
       headingImageView = UIImageView(image: img)
