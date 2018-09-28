@@ -1,6 +1,8 @@
 # getThere
 App shows the fastest way to get somewhere in Berlin by public services. Uses GPS Location and VBB-API.
 
+-- currently in development --
+
 uses:
 - MapKit
 - CoreLocation
