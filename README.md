@@ -26,3 +26,4 @@ uses:
 ![regional icon](https://github.com/misteu/getThere/blob/master/assets/regional.png "regional icon")
 ![suburban icon](https://github.com/misteu/getThere/blob/master/assets/suburban.png "suburban icon")
 ![subway icon](https://github.com/misteu/getThere/blob/master/assets/subway.png "subway icon")
+![tram icon](https://github.com/misteu/getThere/blob/master/assets/tram.png "tram icon")
