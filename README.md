@@ -6,9 +6,11 @@ The app shows stations around the user on startup. Custom Annotation markers sho
 
 Via a searchfield the user can start an API request to search for a destination. With the first three typed in characters a request is started, after that the search is just locally in the saved response.
 
+![app demo](https://github.com/misteu/getThere/blob/master/doc/demo.gif "App demo")
+
 If one of the suggested stations is selected, this station's id is saved as the destination. As soon as a station to start is clicked, another request for that journey is started and the formatted results are presented in a toast message.
 
-![app demo](https://github.com/misteu/getThere/blob/cd8d0acd8bc8bf1c17cda0933b6bedbfe7bd7705/doc/demo.gif "App demo")
+![app demo2](https://github.com/misteu/getThere/blob/master/doc/demo2.gif "App demo2")
 
 uses:
 - vbb-rest (https://github.com/derhuerst/vbb-rest)
