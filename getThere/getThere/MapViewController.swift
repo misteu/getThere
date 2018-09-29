@@ -16,7 +16,17 @@ class MapViewController: UIViewController, UITextFieldDelegate, MKMapViewDelegat
   var headingImageView: UIImageView?
   var getThereButton: UIButton?
   var selectedSuggestion: String?
+  var selectedId: String?
+  var messageToast: UIView?
+  var selectedAnnotation: CustomPointAnnotation?
+  var topToastLabel: UILabel?
+  let toastColor = UIColor.init(red: 66/255, green: 66/255, blue: 66/255, alpha: 0.8)
+  var isTopToastShown = false
+  var isJourneyToastShown = false
   
+  @IBOutlet weak var journeyToastBottomMargin: NSLayoutConstraint!
+  @IBOutlet weak var journeyLabel: UILabel!
+  @IBOutlet weak var journeyToastScrollView: UIScrollView!
   @IBOutlet weak var mapView: MKMapView!
   
   
@@ -35,7 +45,23 @@ class MapViewController: UIViewController, UITextFieldDelegate, MKMapViewDelegat
     searchTextField.theme.fontColor = UIColor.gray
     
     addNotificationObserver()
-    
+    mapView.userLocation.title = ""
+    initToastColors()
+  }
+  
+  func findAndDrawNearestStationsAsync() {
+    let group = DispatchGroup()
+    group.enter()
+    DispatchQueue.main.async {
+      if let location = self.locationSet.currentLocation {
+        Station.getNearestStations(dispatchGroup: group, location: location)
+      }
+    }
+    // Request ist fertig
+    group.notify(queue: .main) {
+      print("fertig")
+      self.drawLocationsForStations(distance: AppSettings.maxStationDistanceToUser)
+    }
   }
   
   override func touchesBegan(_ touches: Set<UITouch>,
@@ -46,7 +72,7 @@ class MapViewController: UIViewController, UITextFieldDelegate, MKMapViewDelegat
   @objc func jumpToFirstLocation() {
     if let location = locationSet.currentLocation {
       
-      mapView.setCamera(getCameraForLocation(locValue: location, heading: 0), animated: true)
+      mapView.setCamera(getCameraForLocation(locValue: location, heading: 0), animated: false)
       mapView.addAnnotation(mapView.userLocation)
       
       
@@ -56,24 +82,9 @@ class MapViewController: UIViewController, UITextFieldDelegate, MKMapViewDelegat
     }
   }
   
-  // test
-  //  func updateSearchTextFieldAsync(location: CLLocationCoordinate2D) {
-  //    let group = DispatchGroup()
-  //    group.enter()
-  //    DispatchQueue.main.async {
-  //      Station.getNearestStations(dispatchGroup: group, location: location)
-  //    }
-  //    // Request ist fertig
-  //    group.notify(queue: .main) {
-  //      print("fertig")
-  //
-  //      let stations = Station.foundStations
-  //      if stations.count > 0 {
-  //        print(stations)
-  //        self.searchTextField.filterStrings(stations)
-  //      }
-  //    }
-  //  }
+  func mapViewDidFinishRenderingMap(_ mapView: MKMapView, fullyRendered: Bool) {
+    findAndDrawNearestStationsAsync()
+  }
   
   
   func updateSearchTextFieldAsync(userInput: String) {
@@ -86,17 +97,24 @@ class MapViewController: UIViewController, UITextFieldDelegate, MKMapViewDelegat
     group.notify(queue: .main) {
       print("fertig")
       
-      let stations = Station.foundStationNames
+      let stations = Station.foundStationNamesAndIds
       if stations.count > 0 {
-        print(stations)
-        print("update")
-        self.searchTextField.filterStrings(stations)
+        //print(stations)
+        print("update Stations")
+        
+        var stationNames = [String]()
+        
+        for station in stations {
+          stationNames.append(station.value)
+        }
+        self.searchTextField.filterStrings(stationNames)
+        self.searchTextField.stopLoadingIndicator()
       }
     }
   }
   
   func getCameraForLocation(locValue: CLLocationCoordinate2D, heading: Double) -> MKMapCamera {
-    return MKMapCamera.init(lookingAtCenter: CLLocationCoordinate2D.init(latitude: locValue.latitude, longitude: locValue.longitude), fromDistance: 500, pitch: 20, heading: heading)
+    return MKMapCamera.init(lookingAtCenter: CLLocationCoordinate2D.init(latitude: locValue.latitude, longitude: locValue.longitude), fromDistance: AppSettings.zoomDistanceFirstUserLocation, pitch: 20, heading: heading)
   }
   
   @objc func textFieldDidChange(_ textField: UITextField) {
@@ -105,6 +123,7 @@ class MapViewController: UIViewController, UITextFieldDelegate, MKMapViewDelegat
         if !isLocalStationList {
           updateSearchTextFieldAsync(userInput: text)
           isLocalStationList = true
+          searchTextField.showLoadingIndicator()
         }
       } else {
         searchTextField.filterStrings([])
@@ -139,87 +158,118 @@ class MapViewController: UIViewController, UITextFieldDelegate, MKMapViewDelegat
     
     if let selectedItem = notification.userInfo?["selectedItem"] as? String {
       selectedSuggestion = selectedItem
-      
-      if let button = getThereButton {
-        UIView.animate(withDuration: 0.2,
-                       delay: 0.0,
-                       options: UIView.AnimationOptions.curveEaseInOut,
-                       animations: {
-                        button.frame = CGRect.init(x: button.frame.minX, y: 5, width: button.frame.width, height: 50.0)
-        })
-      }
+      selectedId = Station.foundStationNamesAndIds.key(forValue: selectedItem)
+//      if let button = getThereButton {
+//        UIView.animate(withDuration: 0.2,
+//                       delay: 0.0,
+//                       options: UIView.AnimationOptions.curveEaseInOut,
+//                       animations: {
+//                        button.frame = CGRect.init(x: button.frame.minX, y: 5, width: button.frame.width, height: 50.0)
+//        })
+//
+//      }
+      print(selectedId)
     }
     
-    if getThereButton == nil {
-      createGetThereButton()
-    }
+    showTopToast(withMessage: "Select a station to start from", forSeconds: nil)
+//    if getThereButton == nil {
+//      createGetThereButton()
+//    }
   }
   
   @objc func buttonAction(sender: UIButton!) {
     print("Button tapped")
-    
-    let group = DispatchGroup()
-    group.enter()
-    DispatchQueue.main.async {
-      if let location = self.locationSet.currentLocation {
-        Station.getNearestStations(dispatchGroup: group, location: location)
-      }
-    }
-    // Request ist fertig
-    group.notify(queue: .main) {
-      print("fertig")
-      self.drawLocationsForStations()
-    }
-    
+  
   }
   
-  func drawLocationsForStations() {
+  func drawLocationsForStations(distance: Int) {
     for station in Station.nearestStations {
       
-      let stationAnnotation = CustomPointAnnotation()
-      
-      var loc = CLLocationCoordinate2D.init()
-      
-      if let location = station["location"] as? [String:Any] {
-        if let lat = location["latitude"] as? Double {
-          loc.latitude = lat
-        }
+      if let dist = station["distance"] as? Int {
         
-        if let long = location["longitude"] as? Double {
-          loc.longitude = long
-        }
-      }
-      
-      if let products = station["products"] as? [String:Bool] {
-        var resultStr = ""
-        var multiCount = 0
-        
-        for product in products {
-          if product.value {
-            if resultStr == "" {
-              resultStr = product.key
-            } else {
-              resultStr = "\(resultStr), \(product.key)"
+        if dist < distance {
+          
+          let stationAnnotation = CustomPointAnnotation()
+          
+          if let id = station["id"] as? String {
+            stationAnnotation.stationID = id
+          }
+          
+          var loc = CLLocationCoordinate2D.init()
+          
+          if let location = station["location"] as? [String:Any] {
+            if let lat = location["latitude"] as? Double {
+              loc.latitude = lat
             }
-            stationAnnotation.pinCustomImageName = product.key
-            multiCount += 1
+            
+            if let long = location["longitude"] as? Double {
+              loc.longitude = long
+            }
           }
-          if multiCount > 1 {
-            stationAnnotation.pinCustomImageName = AnnotationImage.multi.rawValue
+          
+          //var linesAtStation = [String]()
+          var resultStr = ""
+          
+          if let lines = station["lines"] as? [[String:Any]] {
+            
+            for line in lines {
+              if let name = line["name"] as? String {
+                if let product = line["product"] as? String {
+                  var fullName = ""
+                  
+                  switch product {
+                  case "suburban":
+                    fullName = name
+                    break
+                  case "subway":
+                    fullName = name
+                    break
+                  case "regional":
+                    fullName = "RE"
+                    break
+                  case "express":
+                    fullName = "EXPRESS"
+                    break
+                  default:
+                    fullName = "\(product.uppercased()) \(name)"
+                  }
+                  
+                  if resultStr == "" {
+                    resultStr = fullName
+                  } else {
+                    resultStr = "\(resultStr), \(fullName)"
+                  }
+                }
+              }
+            }
+            stationAnnotation.annotationText = "\n\(resultStr.uppercased())"
           }
+          
+          if let products = station["products"] as? [String:Bool] {
+            var multiCount = 0
+            
+            for product in products {
+              if product.value {
+                stationAnnotation.pinCustomImageName = product.key
+                multiCount += 1
+              }
+              if multiCount > 1 {
+                stationAnnotation.pinCustomImageName = AnnotationImage.multi.rawValue
+              }
+            }
+          }
+          
+          if let stationName = station["name"] as? String {
+            stationAnnotation.title = stationName
+          }
+          
+          stationAnnotation.coordinate = loc
+          
+          self.drawLocationOnMap(location: loc, pointAnnotation: stationAnnotation)
         }
-        stationAnnotation.subtitle = resultStr.uppercased()
       }
-      
-      if let stationName = station["name"] as? String {
-        stationAnnotation.title = stationName
-      }
-      
-      stationAnnotation.coordinate = loc
-      
-      self.drawLocationOnMap(location: loc, pointAnnotation: stationAnnotation)
     }
-
+    
   }
   
   func drawLocationOnMap(location: CLLocationCoordinate2D, pointAnnotation: CustomPointAnnotation) {
@@ -238,8 +288,6 @@ class MapViewController: UIViewController, UITextFieldDelegate, MKMapViewDelegat
   }
   
   func mapView(_ mapView: MKMapView, didAdd views: [MKAnnotationView]) {
-    
-    
     
     if views.last?.annotation is MKUserLocation {
       print("didAdd!")
@@ -265,7 +313,7 @@ class MapViewController: UIViewController, UITextFieldDelegate, MKMapViewDelegat
   @objc func updateHeadingRotation(notification: NSNotification) {
     
     if let newHeading = notification.userInfo?["newHeading"] as? CLHeading {
-      print("Heading: \(newHeading.trueHeading)")
+      //print("Heading: \(newHeading.trueHeading)")
       headingImageView?.isHidden = false
       let rotation = CGFloat(newHeading.trueHeading/180 * Double.pi)
       headingImageView?.transform = CGAffineTransform(rotationAngle: rotation)
@@ -289,8 +337,7 @@ class MapViewController: UIViewController, UITextFieldDelegate, MKMapViewDelegat
   }
   func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
     
-    guard !annotation.isKind(of: MKUserLocation.self) else {
-      
+    if annotation.isKind(of: MKUserLocation.self) {
       return nil
     }
     
@@ -299,9 +346,29 @@ class MapViewController: UIViewController, UITextFieldDelegate, MKMapViewDelegat
     var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: annotationIdentifier)
     
     if annotationView == nil {
+      
+      //Standard Annotation View
       annotationView = MKAnnotationView(annotation: annotation, reuseIdentifier: annotationIdentifier)
       annotationView!.rightCalloutAccessoryView = UIButton(type: .detailDisclosure)
       annotationView!.canShowCallout = true
+
+      
+//      annotationView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: annotationIdentifier)
+//      annotationView?.canShowCallout = true
+//
+      let label1 = UILabel(frame: CGRect.init(x: 0, y: 0, width: 200, height: 21))
+      
+      if let customPointAnnotation = annotation as? CustomPointAnnotation {
+        
+        label1.text = customPointAnnotation.annotationText
+        label1.numberOfLines = 0
+        annotationView!.detailCalloutAccessoryView = label1;
+        
+        let width = NSLayoutConstraint(item: label1, attribute: NSLayoutConstraint.Attribute.width, relatedBy: NSLayoutConstraint.Relation.lessThanOrEqual, toItem: nil, attribute: NSLayoutConstraint.Attribute.notAnAttribute, multiplier: 1, constant: 200)
+        label1.addConstraint(width)
+        
+      }
+      
     }
     else {
       annotationView!.annotation = annotation
@@ -320,6 +387,242 @@ class MapViewController: UIViewController, UITextFieldDelegate, MKMapViewDelegat
     
     return annotationView
     
+  }
+  
+  func showTopToast(withMessage: String, forSeconds: Double?) {
+    isTopToastShown = true
+    messageToast = UIView(frame: CGRect(x: 5, y: -55, width: mapView.bounds.width-10, height: 50.0))
+    
+    if let message = messageToast {
+      message.backgroundColor = toastColor
+      
+      var messageLabel = topToastLabel
+      messageLabel = UILabel(frame: CGRect.init(x: 5, y: 0, width: message.frame.width, height: 50.0))
+      messageLabel?.text = withMessage
+      messageLabel?.backgroundColor = .clear
+      messageLabel?.textColor = .white
+      messageLabel?.textAlignment = NSTextAlignment.center
+      messageLabel?.font = UIFont.init(name: "DINAlternate-Bold", size: 14.0)
+      
+      
+      if let label = messageLabel {
+        message.addSubview(label)
+      }
+      self.mapView.addSubview(message)
+      
+      if let delay = forSeconds {
+        UIView.animate(withDuration: 0.2,
+                       delay: 0.0,
+                       options: UIView.AnimationOptions.curveEaseInOut,
+                       animations: {
+                        message.frame = CGRect.init(x: 5, y: 5, width: message.frame.width, height: 50.0)
+        }, completion: { (finished: Bool) in
+          UIView.animate(withDuration: 0.2,
+                         delay: delay,
+                         options: UIView.AnimationOptions.curveEaseInOut,
+                         animations: {
+                          message.frame = CGRect.init(x: 5, y: -55, width: message.frame.width, height: 50.0)
+          })
+        })
+      } else {
+        UIView.animate(withDuration: 0.2,
+                       delay: 0.0,
+                       options: UIView.AnimationOptions.curveEaseInOut,
+                       animations: {
+                        message.frame = CGRect.init(x: 5, y: 5, width: message.frame.width, height: 50.0)
+        })
+      }
+    }
+  }
+  
+  func hideTopToast() {
+    if let message = messageToast {
+      UIView.animate(withDuration: 0.2,
+                     delay: 0.0,
+                     options: UIView.AnimationOptions.curveEaseInOut,
+                     animations: {
+                      message.frame = CGRect.init(x: 5, y: -55, width: self.mapView.bounds.width-10, height: 50.0)
+      }, completion: { (finished: Bool) in
+        self.isTopToastShown = false
+        })
+    }
+    
+  }
+  
+  func initToastColors() {
+    if let messageLabel = journeyLabel {
+      messageLabel.numberOfLines = 0
+      messageLabel.backgroundColor = .clear
+      messageLabel.textColor = .white
+      
+    }
+    
+    if let journeyScroll = journeyToastScrollView {
+      journeyScroll.backgroundColor = toastColor
+    }
+  }
+  
+  func showJourneyToastBottom(withMessage: String) {
+    isJourneyToastShown = true
+    // halbtransparenten Hintergrund oder so
+    
+    if let messageLabel = journeyLabel {
+      messageLabel.text = withMessage
+      
+      journeyToastBottomMargin.constant = 5
+      journeyToastScrollView.isHidden = false
+      UIView.animate(withDuration: 0.2) {
+        self.view.layoutIfNeeded()
+      }
+      
+    }
+    
+    if isTopToastShown {
+      hideTopToast()
+    }
+    
+  }
+  
+  func hideJourneyToast() {
+    isJourneyToastShown = false
+    journeyToastBottomMargin.constant = -155
+    UIView.animate(withDuration: 0.2) {
+      self.view.layoutIfNeeded()
+    }
+    
+    if !isTopToastShown {
+      showTopToast(withMessage: "Select a station to start from", forSeconds: nil)
+    }
+    
+  }
+  
+  func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
+  
+    selectedAnnotation = view.annotation as? CustomPointAnnotation
+    
+    if let startId = selectedAnnotation?.stationID, let destId = selectedId{
+      print("URL: from=\(startId)&to=\(destId)")
+      let group = DispatchGroup()
+      group.enter()
+      
+      DispatchQueue.main.async {
+        
+        Station.getJourney(dispatchGroup: group, fromID: startId, toID: destId)
+        self.showJourneyToastBottom(withMessage: "Loading journeys...")
+      }
+      // Request ist fertig
+      group.notify(queue: .main) {
+
+        self.hideJourneyToast()
+        print("Journeys fertig")
+        
+        // Immer Departure, Origin, Departure, Origin hintereinander weg im Array
+        var journeyStationTimes = [(String,String,String)]()
+        
+        let firstJourney = Station.foundJourneys[0]
+        print(firstJourney)
+        if let legs = firstJourney["legs"] as? [[String:Any]] {
+          for leg in legs {
+            
+            var legOrigin = ("","","")
+            var legDestination = ("","","")
+            
+            // Origin
+            if let origin = leg["origin"] as? [String:Any] {
+              if let name = origin["name"] as? String {
+                legOrigin.0 = name
+              }
+            }
+            if let departure = leg["departure"] as? String {
+              legOrigin.1 = departure
+            }
+            
+            if let destination = leg["destination"] as? [String:Any] {
+              if let name = destination["name"] as? String {
+                legDestination.0 = name
+              }
+            }
+            if let arrival = leg["arrival"] as? String {
+              legDestination.1 = arrival
+            }
+            
+            if let mode = leg["mode"] as? String {
+              if mode == "walking" {
+                legOrigin.2 = "🚶‍♀️"
+                legDestination.2 = "🚶‍♂️"
+              }
+            } else {
+              if let line = leg["line"] as? [String:Any] {
+                if let product = line["product"] as? String {
+                  switch product {
+                  case "suburban":
+                    legOrigin.2 = ""
+                    break
+                  case "subway":
+                    legOrigin.2 = ""
+                    break
+                  case "regional":
+                    legOrigin.2 = "RE "
+                    break
+                  case "express":
+                    legOrigin.2 = "EXPRESS "
+                    break
+                  default:
+                    legOrigin.2 = product.uppercased()
+                  }
+                  
+                  legDestination.2 = legOrigin.2
+                }
+                if let linename = line["name"] as? String {
+                  legOrigin.2 = "\(legOrigin.2)\(linename)"
+                  legDestination.2 = "\(legDestination.2)\(linename)"
+                }
+              }
+            }
+            
+            journeyStationTimes.append(legOrigin)
+            journeyStationTimes.append(legDestination)
+          }
+        }
+        
+      
+        var toastString = ""
+        var legIndex = 0
+        for leg in journeyStationTimes {
+          
+          // Uhrzeit aus Datumsstring holen
+          let startIndex = leg.1.index(leg.1.startIndex, offsetBy: 11)
+          let endIndex = leg.1.index(leg.1.startIndex, offsetBy: 16)
+          let time = leg.1[startIndex ..< endIndex]
+          
+          if toastString == "" {
+            toastString = "\(time) - \(leg.2) \(leg.0)"
+          } else {
+            toastString = "\(toastString)\n\(time) - \(leg.2) \(leg.0)"
+          }
+          legIndex += 1
+          
+          if legIndex%2 == 0 {
+            if legIndex < journeyStationTimes.count {
+              toastString = "\(toastString)\n"
+            } else {
+              toastString = "\(toastString)"
+            }
+          }
+        }
+        
+        self.showJourneyToastBottom(withMessage: toastString)
+      }
+    
+    }
+  }
+  
+  func mapView(_ mapView: MKMapView, didDeselect view: MKAnnotationView) {
+    hideJourneyToast()
+  }
+  
+  func textFieldDidBeginEditing(_ textField: UITextField) {
+    hideTopToast()
   }
   
 }

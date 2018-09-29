@@ -9,15 +9,16 @@
 import Foundation
 import CoreLocation
 
-
 class Station {
   
   static var nearestStations = [[String:Any]]()
   static var foundStationNames = [String]()
+  static var foundJourneys = [[String:Any]]()
+  static var foundStationNamesAndIds = [String:String]()
   
   static func getNearestStations(dispatchGroup: DispatchGroup, location: CLLocationCoordinate2D) {
     // Set up the URL request
-    let todoEndpoint: String = "https://1.bvg.transport.rest/stations/nearby?latitude=\(location.latitude)&longitude=\(location.longitude)"
+    let todoEndpoint: String = "https://1.bvg.transport.rest/stations/nearby?latitude=\(location.latitude)&longitude=\(location.longitude)&stationLines=true"
     guard let url = URL(string: todoEndpoint) else {
       print("Error: cannot create URL")
       return
@@ -49,6 +50,7 @@ class Station {
           let json = try JSONSerialization.jsonObject(with: responseData, options: []) as? [[String:Any]]
           
           if let stations = json {
+            //TEST Stuff
 //            for station in stations {
 //              if let stationName = station["location"] as? String{
 //                //print(stationName)
@@ -104,9 +106,10 @@ class Station {
         
         if let stations = json {
           for station in stations {
-            if let stationName = station["name"] as? String{
+            if let stationName = station["name"] as? String, let stationId = station["id"] as? String{
               //print(stationName)
-              foundStationNames.append(stationName)
+              //foundStationNames.append(stationName)
+              foundStationNamesAndIds.updateValue(stationName, forKey: stationId)
             }
           }
         }
@@ -120,5 +123,54 @@ class Station {
     task.resume()
   }
   
+  
+  
+  static func getJourney(dispatchGroup: DispatchGroup, fromID: String, toID:String) {
+    
+
+    // Set up the URL request
+    let todoEndpoint: String = "https://1.bvg.transport.rest/journeys?from=\(fromID)&to=\(toID)"
+    guard let url = URL(string: todoEndpoint) else {
+      print("Error: cannot create URL")
+      return
+    }
+    let urlRequest = URLRequest(url: url)
+    
+    // set up the session
+    let config = URLSessionConfiguration.default
+    let session = URLSession(configuration: config)
+    
+    
+    // make the request
+    let task = session.dataTask(with: urlRequest) {
+      (data, response, error) in
+      // check for any errors
+      guard error == nil else {
+        print("error calling GET on /todos/1")
+        print(error!)
+        return
+      }
+      // make sure we got data
+      guard let responseData = data else {
+        print("Error: did not receive data")
+        return
+      }
+      // parse the result as JSON, since that's what the API provides
+      
+      do {
+        let json = try JSONSerialization.jsonObject(with: responseData, options: []) as? [[String:Any]]
+        
+        if let journeys = json {
+          foundJourneys = journeys
+        }
+        
+      } catch {
+        print("irgendein Fehler")
+      }
+      dispatchGroup.leave()
+    }
+    
+    task.resume()
+  }
   
 }

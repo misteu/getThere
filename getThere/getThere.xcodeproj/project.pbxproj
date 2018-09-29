@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CEA3FBD8215E764B00D37D92 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEA3FBD7215E764B00D37D92 /* AppSettings.swift */; };
 		CED002BC215AC54F002CE217 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CED002BB215AC54F002CE217 /* AppDelegate.swift */; };
 		CED002BE215AC54F002CE217 /* MapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CED002BD215AC54F002CE217 /* MapViewController.swift */; };
 		CED002C1215AC54F002CE217 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CED002BF215AC54F002CE217 /* Main.storyboard */; };
@@ -31,6 +32,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		CEA3FBD7215E764B00D37D92 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		CED002B8215AC54F002CE217 /* getThere.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = getThere.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CED002BB215AC54F002CE217 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		CED002BD215AC54F002CE217 /* MapViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewController.swift; sourceTree = "<group>"; };
@@ -89,6 +91,7 @@
 			children = (
 				CED002BB215AC54F002CE217 /* AppDelegate.swift */,
 				CED002BD215AC54F002CE217 /* MapViewController.swift */,
+				CEA3FBD7215E764B00D37D92 /* AppSettings.swift */,
 				CED002E4215CF4D5002CE217 /* CustomPointAnnotation.swift */,
 				CED002DF215B8A16002CE217 /* Locations.swift */,
 				CED002DD215B7548002CE217 /* SearchTextField.swift */,
@@ -218,6 +221,7 @@
 				CED002BE215AC54F002CE217 /* MapViewController.swift in Sources */,
 				CED002BC215AC54F002CE217 /* AppDelegate.swift in Sources */,
 				CED002DC215AE0E2002CE217 /* Stations.swift in Sources */,
+				CEA3FBD8215E764B00D37D92 /* AppSettings.swift in Sources */,
 				CED002DE215B7548002CE217 /* SearchTextField.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

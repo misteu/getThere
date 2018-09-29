@@ -14,3 +14,9 @@ extension Notification.Name {
   static let newHeading = Notification.Name("newHeading")
   
 }
+
+extension Dictionary where Value: Equatable {
+  func key(forValue value: Value) -> Key? {
+    return first { $0.1 == value }?.0
+  }
+}

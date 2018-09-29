@@ -19,7 +19,7 @@ class Locations: NSObject, CLLocationManagerDelegate {
   
   func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
     guard let locValue: CLLocationCoordinate2D = manager.location?.coordinate else { return }
-    print("locations = \(locValue.latitude) \(locValue.longitude)")
+    //print("locations = \(locValue.latitude) \(locValue.longitude)")
     currentLocation = locValue
   }
   
