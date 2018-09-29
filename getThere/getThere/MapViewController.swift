@@ -47,6 +47,7 @@ class MapViewController: UIViewController, UITextFieldDelegate, MKMapViewDelegat
     addNotificationObserver()
     mapView.userLocation.title = ""
     initToastColors()
+    
   }
   
   func findAndDrawNearestStationsAsync() {
@@ -71,7 +72,6 @@ class MapViewController: UIViewController, UITextFieldDelegate, MKMapViewDelegat
   
   @objc func jumpToFirstLocation() {
     if let location = locationSet.currentLocation {
-      
       mapView.setCamera(getCameraForLocation(locValue: location, heading: 0), animated: false)
       mapView.addAnnotation(mapView.userLocation)
       
